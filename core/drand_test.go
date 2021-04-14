@@ -444,6 +444,7 @@ func TestDrandPublicStream(t *testing.T) {
 	client := net.NewGrpcClientFromCertManager(cm)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	// get last round first
 	resp, err := client.PublicRand(ctx, rootID, new(drand.PublicRandRequest))
 	require.NoError(t, err)
@@ -452,6 +453,7 @@ func TestDrandPublicStream(t *testing.T) {
 	req := &drand.PublicRandRequest{Round: resp.GetRound()}
 	respCh, err := client.PublicRandStream(ctx, root.drand.priv.Public, req)
 	require.NoError(t, err)
+
 	// expect first round now since node already has it
 	select {
 	case beacon := <-respCh:

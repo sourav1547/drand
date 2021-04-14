@@ -126,6 +126,7 @@ func (s *SyncManager) Run() {
 			lastRoundTime = int(time.Now().Unix())
 		case <-s.done:
 			s.log.Info("sync_manager", "exits")
+			return
 		}
 	}
 }
