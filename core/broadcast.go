@@ -173,6 +173,7 @@ func (b *echoBroadcast) sendout(h []byte, p packet, bypass bool) {
 		Dkg:      dkgproto,
 		Metadata: &metadata,
 	}
+	proto.Size()
 	if bypass {
 		// in a routine cause we don't want to block the processing of the DKG
 		// as well - that's ok since we are only expecting to send 3 packets out
@@ -292,18 +293,20 @@ func (d *dispatcher) stop() {
 }
 
 type sender struct {
-	l      log.Logger
-	client net.ProtocolClient
-	to     net.Peer
-	newCh  chan broadcastPacket
+	l           log.Logger
+	client      net.ProtocolClient
+	to          net.Peer
+	sentMsgSize int
+	newCh       chan broadcastPacket
 }
 
 func newSender(l log.Logger, client net.ProtocolClient, to net.Peer, queueSize int) *sender {
 	return &sender{
-		l:      l,
-		client: client,
-		to:     to,
-		newCh:  make(chan broadcastPacket, queueSize),
+		l:           l,
+		client:      client,
+		to:          to,
+		sentMsgSize: 0,
+		newCh:       make(chan broadcastPacket, queueSize),
 	}
 }
 
@@ -323,6 +326,7 @@ func (s *sender) run() {
 }
 
 func (s *sender) sendDirect(newPacket broadcastPacket) {
+	s.sentMsgSize = s.sentMsgSize + newPacket.Size()
 	beaconID := newPacket.GetMetadata().GetBeaconID()
 	err := s.client.BroadcastDKG(context.Background(), s.to, newPacket)
 	if err != nil {

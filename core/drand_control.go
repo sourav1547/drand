@@ -155,7 +155,7 @@ func (d *Drand) leaderRunSetup(newSetup func(d *Drand) (*setupManager, error)) (
 // until it finishes. If leader is true, this node sends the first packet.
 func (d *Drand) runDKG(leader bool, group *key.Group, timeout uint32, randomness *drand.EntropyInfo) (*key.Group, error) {
 	beaconID := group.ID
-
+	startTime := d.opts.clock.Now().Unix()
 	reader, user := extractEntropy(randomness)
 	config := &dkg.Config{
 		Suite:          key.KeyGroup.(dkg.Suite),
@@ -214,11 +214,20 @@ func (d *Drand) runDKG(leader bool, group *key.Group, timeout uint32, randomness
 	d.cleanupDKG()
 	d.dkgDone = true
 	d.state.Unlock()
+	endTime := d.opts.clock.Now().Unix()
+	dkgTime := endTime - startTime
 	d.log.Infow("", "beacon_id", beaconID, "init_dkg", "dkg_done",
 		"starting_beacon_time", finalGroup.GenesisTime, "now", d.opts.clock.Now().Unix())
 
+	senders := board.dispatcher.senders
+	totalMsgSentSize := 0
+	for _, sender := range senders {
+		totalMsgSentSize = totalMsgSentSize + sender.sentMsgSize
+	}
+
+	d.log.Infow("DKG DATA", "latency", dkgTime, "msgSentSize", totalMsgSentSize)
 	// beacon will start at the genesis time specified
-	go d.StartBeacon(false)
+	// go d.StartBeacon(false)
 
 	return finalGroup, nil
 }

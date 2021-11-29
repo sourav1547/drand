@@ -402,6 +402,7 @@ func (x *PartialBeaconPacket) GetMetadata() *common.Metadata {
 type DKGPacket struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	size          int
 	unknownFields protoimpl.UnknownFields
 
 	Dkg *dkg.Packet `protobuf:"bytes,1,opt,name=dkg,proto3" json:"dkg,omitempty"`
@@ -416,6 +417,13 @@ func (x *DKGPacket) Reset() {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
+}
+
+func (x *DKGPacket) Size() int {
+	if x.size == 0 {
+		x.size = len(x.String()) * 8
+	}
+	return x.size
 }
 
 func (x *DKGPacket) String() string {
